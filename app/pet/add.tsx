@@ -15,6 +15,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { usePetStore } from '../../src/stores/petStore';
+import { useSubscriptionStore } from '../../src/stores/subscriptionStore';
+import { FREE_TIER_LIMITS } from '../../src/config/premiumFeatures';
 
 const SPECIES_OPTIONS = ['Dog', 'Cat', 'Bird', 'Fish', 'Rabbit', 'Hamster', 'Other'];
 const GENDER_OPTIONS = [
@@ -24,7 +26,8 @@ const GENDER_OPTIONS = [
 
 export default function AddPetScreen() {
   const router = useRouter();
-  const { addPet, loading } = usePetStore();
+  const { addPet, loading, pets } = usePetStore();
+  const { isPremium } = useSubscriptionStore();
 
   const [name, setName] = useState('');
   const [species, setSpecies] = useState('');
@@ -62,6 +65,19 @@ export default function AddPetScreen() {
   const handleSave = useCallback(async () => {
     if (!validateForm()) return;
 
+    // Check premium limit before saving
+    if (!isPremium && pets.length >= FREE_TIER_LIMITS.maxPets) {
+      Alert.alert(
+        'Upgrade Required',
+        'Free tier allows 2 pets. Upgrade to Premium for unlimited pets!',
+        [
+          { text: 'Maybe Later', style: 'cancel' },
+          { text: 'Upgrade Now', onPress: () => router.push('/subscription') }
+        ]
+      );
+      return;
+    }
+
     const petData = {
       name: name.trim(),
       species,
@@ -80,7 +96,7 @@ export default function AddPetScreen() {
     } else {
       Alert.alert('Error', 'Failed to add pet. Please try again.');
     }
-  }, [name, species, breed, age, weight, gender, color, microchipId, notes, addPet, router, validateForm]);
+  }, [name, species, breed, age, weight, gender, color, microchipId, notes, addPet, router, validateForm, isPremium, pets]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

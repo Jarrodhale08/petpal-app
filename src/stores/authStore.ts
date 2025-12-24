@@ -9,7 +9,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase, setupAutoRefresh, cleanupAutoRefresh, isSupabaseConfigured } from '../services/supabase';
+import { supabase, setupAutoRefresh, cleanupAutoRefresh, isSupabaseConfigured, initializeAppContext } from '../services/supabase';
 
 // ============================================================================
 // TYPES
@@ -130,6 +130,12 @@ export const useAuthStore = create<AuthState>()(
             user: data.user,
             session: data.session
           });
+
+          // Initialize app context for multi-tenant isolation
+          if (data.session) {
+            await initializeAppContext();
+          }
+
           return true;
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Sign up failed';
@@ -159,6 +165,10 @@ export const useAuthStore = create<AuthState>()(
             user: data.user,
             session: data.session
           });
+
+          // Initialize app context for multi-tenant isolation
+          await initializeAppContext();
+
           return true;
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Sign in failed';
