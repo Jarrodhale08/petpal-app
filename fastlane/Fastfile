@@ -1,0 +1,68 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Upload screenshots and metadata to App Store Connect"
+  lane :upload_metadata do
+    deliver(
+      skip_binary_upload: true,
+      skip_screenshots: false,
+      force: true,
+      precheck_include_in_app_purchases: false
+    )
+  end
+
+  desc "Upload screenshots only"
+  lane :upload_screenshots do
+    deliver(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      skip_screenshots: false,
+      force: true
+    )
+  end
+
+  desc "Submit app for review"
+  lane :submit do
+    deliver(
+      submit_for_review: true,
+      automatic_release: true,
+      force: true
+    )
+  end
+end
+
+platform :android do
+  desc "Upload metadata to Google Play"
+  lane :upload_metadata do
+    upload_to_play_store(
+      track: 'internal',
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Upload screenshots to Google Play"
+  lane :upload_screenshots do
+    upload_to_play_store(
+      track: 'internal',
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true
+    )
+  end
+
+  desc "Promote to production"
+  lane :promote do
+    upload_to_play_store(
+      track: 'internal',
+      track_promote_to: 'production',
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+end
